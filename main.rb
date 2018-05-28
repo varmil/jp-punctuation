@@ -1,8 +1,9 @@
 require "json"
 require "./zch_sentence"
+require 'pp'
 
 # 読み込むJSONスクリプトの相対パス
-JSON_PATH = "json/001.json"
+JSON_PATH = "json/003.json"
 
 # 生台本を処理するクラス
 class ScriptReader
@@ -71,6 +72,6 @@ times.each.with_index do |time, i|
 end
 
 # debug
-p result
+pp result
 # p result.map { |v| v[:time] }
 # p result.map { |v| v[:text] }
