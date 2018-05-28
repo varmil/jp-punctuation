@@ -1,28 +1,15 @@
 require "json"
 require "./zch_sentence"
 
-# f = File.open("raw_text/002.txt")
-# s = f.read
-# f.close
-# puts ZchSentence.emend(s)
+# 読み込むJSONスクリプトの相対パス
+JSON_PATH = "json/001.json"
 
-
-# TODO: ブロック（cues）ごとに処理をして、文章結合（改行させない）。
-# linebreak_remover.rb | punc_flatten.rb
-
-# linebreak_remover.rb
-# 入力、出力はjson。textのlinebreakのみを削除して上書きする
-
-# punc_flatten.rb
-# 出力は文字列の配列。cuesごとに配列にする。 [ "block1", "block2", ... ]
-# このときpunctuationをかける。ブロックはlinebreakを含まないように注意。
-
-
-
-class LinebreakRemover
+# 生台本を処理するクラス
+class ScriptReader
   KEY_PARAGRAPHS = 'paragraphs'
   KEY_CUES = 'cues'
   KEY_TEXT = 'text'
+  KEY_TIME = 'time'
 
   # read JSON file
   def initialize(filePath)
@@ -32,31 +19,58 @@ class LinebreakRemover
   end
 
   # trim linebreak and whitespace which is not needed
-  def execute
+  # return array of array （cuesごとの配列＋textごとの配列）
+  def parseText
     @rawJson[KEY_PARAGRAPHS].map { |para|
       para[KEY_CUES].map { |v| v[KEY_TEXT].gsub(/([\r\n]|\s)/, "") }
     }
   end
+
+  # return array (the first time of each cue)
+  def parseTime
+    @rawJson[KEY_PARAGRAPHS].map { |para|
+      para[KEY_CUES].map { |v| v[KEY_TIME] }.first
+    }
+  end
 end
 
-# [ ] 一次元配列を受け取る
-# 適切に句読点を付与し、（joined string | array）を返却する
 class Punctuator
-  def initialize(input)
-    @input = input
+  # ScriptReaderが処理したテキスト（2次元配列）を受け取る
+  def initialize(texts)
+    @texts = texts
   end
 
+  # 適切に句読点を付与し、（joined string :array）を返却する
   def execute
-    @input.map { |cues|
+    @texts.map { |cues|
       pre = cues.map { |v| v << "\n" }.join
-      [ ZchSentence.emend(pre).join ]
+      ZchSentence.emend(pre).join
     }
   end
 end
 
 
-linebreakRemover = LinebreakRemover.new("json/002.json")
-output = linebreakRemover.execute()
 
-punctuator = Punctuator.new(output)
-p punctuator.execute()
+# 基本戦略：ブロック（cues）ごとに処理をして文章結合
+reader = ScriptReader.new(JSON_PATH)
+# create time array
+times = reader.parseTime()
+# create text array
+punctuator = Punctuator.new(reader.parseText())
+texts = punctuator.execute()
+
+# check
+if times.length != texts.length
+  raise "the length of times:#{times.length} and texts:#{texts.length} is NOT matched"
+end
+
+# merge two arrays (times, texts) into a hash
+result = []
+times.each.with_index do |time, i|
+  result << { :time => times[i], :text => texts[i] }
+end
+
+# debug
+p result
+# p result.map { |v| v[:time] }
+# p result.map { |v| v[:text] }
