@@ -42,7 +42,7 @@ module ZchSentence
 
   # 「。」「、」を付加するなどの自動校正を行う
   def self.emend(body)
-    adhoc_split(body).join("\n")
+    adhoc_split(body)#.join("\n")
   end
 
   #   ２ちゃんねるのレス（生データ）を想定したさまざまなルールを使って
