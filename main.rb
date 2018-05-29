@@ -3,7 +3,8 @@ require "./zch_sentence"
 require 'pp'
 
 # 読み込むJSONスクリプトの相対パス
-JSON_PATH = "json/003.json"
+# JSON_PATH = "json/jill_bolte_taylor_s_powerful_stroke_of_insight.json"
+JSON_PATH = "json/shawn_achor_the_happy_secret_to_better_work.json"
 
 # 生台本を処理するクラス
 class ScriptReader
